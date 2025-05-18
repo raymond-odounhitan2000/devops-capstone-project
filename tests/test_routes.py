@@ -13,10 +13,7 @@ from tests.factories import AccountFactory
 from service.common import status
 from service.models import db, Account, init_db
 from service.routes import app
-<<<<<<< Updated upstream
-=======
 import json
->>>>>>> Stashed changes
 from service import talisman
 
 # Constants
