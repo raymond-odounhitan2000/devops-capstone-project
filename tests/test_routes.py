@@ -13,6 +13,10 @@ from tests.factories import AccountFactory
 from service.common import status
 from service.models import db, Account, init_db
 from service.routes import app
+<<<<<<< Updated upstream
+=======
+import json
+>>>>>>> Stashed changes
 from service import talisman
 
 # Constants
@@ -23,6 +27,9 @@ HTTPS_ENVIRON = {'wsgi.url_scheme': 'https'}
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql://postgres:postgres@localhost:5432/postgres"
 )
+
+BASE_URL = "/accounts"
+HTTPS_ENVIRON = {'wsgi.url_scheme': 'https'}
 
 
 ######################################################################
@@ -40,6 +47,7 @@ class TestAccountService(TestCase):
         app.logger.setLevel(logging.CRITICAL)
         talisman.force_https = False  # Disable HTTPS enforcement in test mode
         init_db(app)
+        talisman.force_https = False
 
     def setUp(self):
         """Run before each test"""
@@ -50,6 +58,19 @@ class TestAccountService(TestCase):
     def tearDown(self):
         """Run after each test"""
         db.session.remove()
+
+    def test_security_headers(self):
+        """It should return security headers"""
+        response = self.client.get('/', environ_overrides=HTTPS_ENVIRON)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        headers = {
+            'X-Frame-Options': 'SAMEORIGIN',
+            'X-Content-Type-Options': 'nosniff',
+            'Content-Security-Policy': 'default-src \'self\'; object-src \'none\'',
+            'Referrer-Policy': 'strict-origin-when-cross-origin'
+        }
+        for key, value in headers.items():
+            self.assertEqual(response.headers.get(key), value)
 
     ######################################################################
     #  H E L P E R   M E T H O D S
