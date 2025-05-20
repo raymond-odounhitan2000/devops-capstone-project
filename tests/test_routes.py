@@ -6,26 +6,27 @@ Run tests with:
   coverage report -m
 """
 import os
+import json
 import logging
 from unittest import TestCase
 from tests.factories import AccountFactory
 from service.common import status
 from service.models import db, Account, init_db
 from service.routes import app
+import json
 from service import talisman
 
 # Constants
 BASE_URL = "/accounts"
-HTTPS_ENVIRON = {'wsgi.url_scheme': 'https'}
+HTTPS_ENVIRON = {"wsgi.url_scheme": "https"}
 
 # Set default DB URI for testing
 DATABASE_URI = os.getenv(
-    "DATABASE_URI", 
-    "postgresql://postgres:postgres@localhost:5432/postgres"
+    "DATABASE_URI", "postgresql://postgres:postgres@localhost:5432/postgres"
 )
 
 BASE_URL = "/accounts"
-HTTPS_ENVIRON = {'wsgi.url_scheme': 'https'}
+HTTPS_ENVIRON = {"wsgi.url_scheme": "https"}
 
 
 ######################################################################
@@ -57,13 +58,13 @@ class TestAccountService(TestCase):
 
     def test_security_headers(self):
         """It should return security headers"""
-        response = self.client.get('/', environ_overrides=HTTPS_ENVIRON)
+        response = self.client.get("/", environ_overrides=HTTPS_ENVIRON)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         headers = {
-            'X-Frame-Options': 'SAMEORIGIN',
-            'X-Content-Type-Options': 'nosniff',
-            'Content-Security-Policy': 'default-src \'self\'; object-src \'none\'',
-            'Referrer-Policy': 'strict-origin-when-cross-origin'
+            "X-Frame-Options": "SAMEORIGIN",
+            "X-Content-Type-Options": "nosniff",
+            "Content-Security-Policy": "default-src 'self'; object-src 'none'",
+            "Referrer-Policy": "strict-origin-when-cross-origin",
         }
         for key, value in headers.items():
             self.assertEqual(response.headers.get(key), value)
@@ -120,9 +121,7 @@ class TestAccountService(TestCase):
         """POST /accounts - Should return 415 with wrong media type"""
         account = AccountFactory()
         resp = self.client.post(
-            BASE_URL,
-            json=account.serialize(),
-            content_type="text/html"
+            BASE_URL, json=account.serialize(), content_type="text/html"
         )
         self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
@@ -158,8 +157,11 @@ class TestAccountService(TestCase):
     def test_delete_account(self):
         """DELETE /accounts/{id} - It should delete the account"""
         account = self._create_accounts(1)[0]
+
         resp = self.client.delete(f"{BASE_URL}/{account.id}")
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+
+        # Ensure it's deleted
         resp = self.client.get(f"{BASE_URL}/{account.id}")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
@@ -168,9 +170,23 @@ class TestAccountService(TestCase):
         resp = self.client.delete(BASE_URL)
         self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
+    def test_security_headers(self):
+        """It should return security headers"""
+        resp = self.client.get("/", environ_overrides=HTTPS_ENVIRON)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        expected_headers = {
+            "X-Frame-Options": "SAMEORIGIN",
+            "X-Content-Type-Options": "nosniff",
+            "Content-Security-Policy": "default-src 'self'; object-src 'none'",
+            "Referrer-Policy": "strict-origin-when-cross-origin",
+        }
+        for header, expected in expected_headers.items():
+            self.assertEqual(resp.headers.get(header), expected)
+
     def test_cors_security(self):
         """It should return a CORS header"""
-        response = self.client.get('/', environ_overrides=HTTPS_ENVIRON)
+        response = self.client.get("/", environ_overrides=HTTPS_ENVIRON)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Check for the CORS header
-        self.assertEqual(response.headers.get('Access-Control-Allow-Origin'), '*')
+        self.assertEqual(response.headers.get("Access-Control-Allow-Origin"), "*")
