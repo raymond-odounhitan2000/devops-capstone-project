@@ -6,14 +6,12 @@ Run tests with:
   coverage report -m
 """
 import os
-import json
 import logging
 from unittest import TestCase
 from tests.factories import AccountFactory
 from service.common import status
 from service.models import db, Account, init_db
 from service.routes import app
-import json
 from service import talisman
 
 # Constants
@@ -22,7 +20,8 @@ HTTPS_ENVIRON = {"wsgi.url_scheme": "https"}
 
 # Set default DB URI for testing
 DATABASE_URI = os.getenv(
-    "DATABASE_URI", "postgresql://postgres:postgres@localhost:5432/postgres"
+    "DATABASE_URI", 
+    "postgresql://postgres:postgres@localhost:5432/postgres"
 )
 
 BASE_URL = "/accounts"
@@ -157,11 +156,8 @@ class TestAccountService(TestCase):
     def test_delete_account(self):
         """DELETE /accounts/{id} - It should delete the account"""
         account = self._create_accounts(1)[0]
-
         resp = self.client.delete(f"{BASE_URL}/{account.id}")
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
-
-        # Ensure it's deleted
         resp = self.client.get(f"{BASE_URL}/{account.id}")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
@@ -183,7 +179,7 @@ class TestAccountService(TestCase):
         }
         for header, expected in expected_headers.items():
             self.assertEqual(resp.headers.get(header), expected)
-
+            
     def test_cors_security(self):
         """It should return a CORS header"""
         response = self.client.get("/", environ_overrides=HTTPS_ENVIRON)
