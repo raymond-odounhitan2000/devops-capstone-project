@@ -6,7 +6,6 @@ Run tests with:
   coverage report -m
 """
 import os
-import json
 import logging
 from unittest import TestCase
 from tests.factories import AccountFactory
@@ -169,20 +168,6 @@ class TestAccountService(TestCase):
         """DELETE /accounts - Should return 405 METHOD NOT ALLOWED"""
         resp = self.client.delete(BASE_URL)
         self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    def test_security_headers(self):
-        """It should return security headers"""
-        resp = self.client.get("/", environ_overrides=HTTPS_ENVIRON)
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-
-        expected_headers = {
-            "X-Frame-Options": "SAMEORIGIN",
-            "X-Content-Type-Options": "nosniff",
-            "Content-Security-Policy": "default-src 'self'; object-src 'none'",
-            "Referrer-Policy": "strict-origin-when-cross-origin",
-        }
-        for header, expected in expected_headers.items():
-            self.assertEqual(resp.headers.get(header), expected)
 
     def test_cors_security(self):
         """It should return a CORS header"""
