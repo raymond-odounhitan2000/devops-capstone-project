@@ -167,7 +167,7 @@ class TestAccountService(TestCase):
         """DELETE /accounts - Should return 405 METHOD NOT ALLOWED"""
         resp = self.client.delete(BASE_URL)
         self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
-      
+
     def test_cors_security(self):
         """It should return a CORS header"""
         response = self.client.get("/", environ_overrides=HTTPS_ENVIRON)
