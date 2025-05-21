@@ -12,6 +12,7 @@ from tests.factories import AccountFactory
 from service.common import status
 from service.models import db, Account, init_db
 from service.routes import app
+from service import talisman
 
 # Constants
 BASE_URL = "/accounts"
